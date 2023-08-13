@@ -47,7 +47,6 @@ import kotlin.math.roundToInt
 @Composable
 fun ScreenshotScreen() {
     var capturedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
-    var savedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var isHideVisible by remember { mutableStateOf(false) }
     var isHighlightVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -66,14 +65,6 @@ fun ScreenshotScreen() {
                 capturedImageBitmap = captureScreenshot(context)
             }) {
                 Text("Capture Screenshot")
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Button(onClick = {
-                capturedImageBitmap = savedImageBitmap
-            }) {
-                Text("Load Saved Image")
             }
         }
 
@@ -100,7 +91,7 @@ fun ScreenshotScreen() {
                 isHideVisible = false
                 isHighlightVisible = false
             }) {
-                Text("Save & Clear")
+                Text("Clear")
             }
         }
 
@@ -180,7 +171,6 @@ fun RectangleBox(
                 }
         )
     }
-
 }
 
 fun captureScreenshot(context: Context): ImageBitmap {
