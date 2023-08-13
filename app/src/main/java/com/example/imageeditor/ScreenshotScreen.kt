@@ -6,7 +6,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +38,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.core.view.drawToBitmap
@@ -141,7 +142,6 @@ fun RectangleBox(
     Box(
         Modifier
             .fillMaxSize()
-            .border(BorderStroke(2.dp, Color.Green))
             .onSizeChanged { size = it.toSize() }
     ) {
         Box(
@@ -150,20 +150,30 @@ fun RectangleBox(
                 .size(width = width, height = height)
                 .background(background)
                 .pointerInput(Unit) {
-                    detectDragGestures { _, dragAmount ->
+                    detectTransformGestures { _, pan, zoom, _ ->
                         // Current position
                         val original = Offset(offsetX.value, offsetY.value)
                         // New position
-                        val summed = original + dragAmount
+                        val summed = original + pan
+
+                        val newWidth = (width * zoom).coerceAtMost(size.width.dp)
+                        val newHeight = (height * zoom).coerceAtMost(size.height.dp)
+
+                        // Calculate the maximum allowable offset based on new dimensions
+                        val maxX = (size.width - newWidth.toPx()).coerceAtLeast(0f)
+                        val maxY = (size.height - newHeight.toPx()).coerceAtLeast(0f)
 
                         // Create new offset in the limits of the parent
                         val newValue = Offset(
-                            x = summed.x.coerceIn(0f, size.width - width.toPx()),
-                            y = summed.y.coerceIn(0f, size.height - height.toPx())
+                            x = summed.x.coerceIn(0f, maxX),
+                            y = summed.y.coerceIn(0f, maxY)
                         )
+
                         // Apply new offset
                         offsetX.value = newValue.x
                         offsetY.value = newValue.y
+                        width = newWidth
+                        height = newHeight
                     }
                 }
                 .run {
