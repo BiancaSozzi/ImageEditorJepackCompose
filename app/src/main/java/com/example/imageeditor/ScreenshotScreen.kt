@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,10 +47,9 @@ import kotlin.math.roundToInt
 
 
 @Composable
-fun ScreenshotScreen() {
+fun ScreenshotScreen(viewModel: ScreenshotViewModel) {
     var capturedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
-    var isHideVisible by remember { mutableStateOf(false) }
-    var isHighlightVisible by remember { mutableStateOf(false) }
+    val boxesList: List<Box> by viewModel.boxesList.collectAsState()
     val context = LocalContext.current
 
     Column(
@@ -69,10 +69,9 @@ fun ScreenshotScreen() {
             }
         }
 
-
         Row {
             Button(onClick = {
-                isHighlightVisible = true
+                viewModel.addNewBox(boxesList.size.plus(1), BoxType.HIGHLIGHT)
             }) {
                 Text("Highlight")
             }
@@ -80,7 +79,7 @@ fun ScreenshotScreen() {
             Spacer(modifier = Modifier.width(16.dp))
 
             Button(onClick = {
-                isHideVisible = true
+                viewModel.addNewBox(boxesList.size.plus(1), BoxType.HIDE)
             }) {
                 Text("Hide")
             }
@@ -89,8 +88,7 @@ fun ScreenshotScreen() {
 
             Button(onClick = {
                 capturedImageBitmap = null
-                isHideVisible = false
-                isHighlightVisible = false
+                viewModel.clear()
             }) {
                 Text("Clear")
             }
@@ -106,11 +104,13 @@ fun ScreenshotScreen() {
                     contentDescription = "Captured Screenshot",
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (isHideVisible) {
-                    HideContentBox()
-                }
-                if (isHighlightVisible) {
-                    HighlightContentBox()
+
+                boxesList.forEach {box ->
+                    if (box.type == BoxType.HIGHLIGHT) {
+                        HighlightContentBox()
+                    } else {
+                        HideContentBox()
+                    }
                 }
             }
         }
@@ -192,6 +192,6 @@ fun captureScreenshot(context: Context): ImageBitmap {
 @Composable
 fun PreviewCaptureScreenScreen() {
     MaterialTheme {
-        ScreenshotScreen()
+        ScreenshotScreen(ScreenshotViewModel())
     }
 }
