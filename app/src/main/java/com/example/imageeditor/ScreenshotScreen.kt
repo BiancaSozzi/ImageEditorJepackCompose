@@ -63,6 +63,7 @@ fun ScreenshotScreen(viewModel: ScreenshotViewModel) {
 
         Row {
             Button(onClick = {
+                viewModel.clear()
                 capturedImageBitmap = captureScreenshot(context)
             }) {
                 Text("Capture Screenshot")
