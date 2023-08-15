@@ -106,11 +106,7 @@ fun ScreenshotScreen(viewModel: ScreenshotViewModel) {
                 )
 
                 boxesList.forEach {box ->
-                    if (box.type == BoxType.HIGHLIGHT) {
-                        HighlightContentBox()
-                    } else {
-                        HideContentBox()
-                    }
+                    RectangleBox(viewModel = viewModel, id = box.id, type = box.type)
                 }
             }
         }
@@ -118,19 +114,10 @@ fun ScreenshotScreen(viewModel: ScreenshotViewModel) {
 }
 
 @Composable
-fun HideContentBox(){
-    RectangleBox(Color.Black)
-}
-
-@Composable
-fun HighlightContentBox() {
-    RectangleBox(Color.Transparent, BorderStroke(2.dp, Color.Red))
-}
-
-@Composable
 fun RectangleBox(
-    background: Color,
-    borderStroke: BorderStroke? = null) {
+    viewModel: ScreenshotViewModel,
+    id: Int,
+    type: BoxType) {
 
     val offsetX = remember { mutableStateOf(0f) }
     val offsetY = remember { mutableStateOf(0f) }
@@ -138,6 +125,9 @@ fun RectangleBox(
     var height by remember { mutableStateOf(30.dp) }
 
     var size by remember { mutableStateOf(Size.Zero) }
+
+    val background = if (type == BoxType.HIGHLIGHT) Color.Transparent else Color.Black
+    val borderColor = if (type == BoxType.HIGHLIGHT) Color.Red else Color.Black
 
     Box(
         Modifier
@@ -149,6 +139,7 @@ fun RectangleBox(
                 .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
                 .size(width = width, height = height)
                 .background(background)
+                .border(BorderStroke(2.dp, borderColor))
                 .pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
                         // Current position
@@ -164,20 +155,24 @@ fun RectangleBox(
                         val maxY = (size.height - newHeight.toPx()).coerceAtLeast(0f)
 
                         // Create new offset in the limits of the parent
-                        val newValue = Offset(
+                        val newOffsetValue = Offset(
                             x = summed.x.coerceIn(0f, maxX),
                             y = summed.y.coerceIn(0f, maxY)
                         )
 
                         // Apply new offset
-                        offsetX.value = newValue.x
-                        offsetY.value = newValue.y
+                        offsetX.value = newOffsetValue.x
+                        offsetY.value = newOffsetValue.y
                         width = newWidth
                         height = newHeight
+                        viewModel.updateBox(
+                            id = id,
+                            type = type,
+                            width = newWidth,
+                            height = newHeight,
+                            offset = newOffsetValue
+                        )
                     }
-                }
-                .run {
-                    if (borderStroke != null) border(borderStroke) else this
                 }
         )
     }

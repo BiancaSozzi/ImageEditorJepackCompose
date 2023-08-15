@@ -1,5 +1,6 @@
 package com.example.imageeditor
 
+import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class ScreenshotViewModel: ViewModel() {
 
     private val _boxesOnScreen = MutableStateFlow(listOf<Box>())
+    private val _dataToSave = MutableStateFlow(listOf<Box>())
 
     val boxesList: StateFlow<List<Box>>
         get() = _boxesOnScreen.asStateFlow()
@@ -27,17 +29,31 @@ class ScreenshotViewModel: ViewModel() {
             )
         )
         _boxesOnScreen.value = currentList
+        _dataToSave.value = currentList
+        _boxesOnScreen.value.forEach {
+            Log.i("TEST current list on add", it.id.toString())
+        }
     }
 
     fun updateBox(id: Int, type: BoxType, width: Dp, height: Dp, offset: Offset) {
-        val currentList = _boxesOnScreen.value.toMutableList()
-        currentList.removeIf { it.id == id }
-        _boxesOnScreen.value = currentList
-        addNewBox(id, type, width, height, offset)
+        // Update the values in the data needed to save the image
+        val dataToSaveList = _dataToSave.value.toMutableList()
+        dataToSaveList.removeIf { it.id == id }
+        dataToSaveList.add(
+            Box(
+                id = id,
+                width = width,
+                height = height,
+                offset = offset,
+                type = type
+            )
+        )
+        _dataToSave.value = dataToSaveList
     }
 
     fun clear() {
         _boxesOnScreen.value = mutableListOf()
+        _dataToSave.value = mutableListOf()
     }
 
 }
